@@ -1,0 +1,183 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: wso2
+  name: <WS02_APP_NAME>-deploy
+  annotations:
+    kubernetes.io/change-cause: "init deploy - Universal Gateway"
+  labels:
+    app: <WS02_APP_NAME>
+spec:
+  selector:
+    matchLabels:
+      app: <WS02_APP_NAME>
+  replicas: 1 #Always keep at least 2 pods for zero downtime
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 50%     # Staging: balanced rollout (1 extra pod per 2 replicas) 
+      maxUnavailable: 0 # Ensures no downtime (always keep all old pods until new ones are ready)
+  template:
+    metadata:
+      labels:
+        app: <WS02_APP_NAME>
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/wso2: ""      
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        fsGroup: 0
+      containers:
+        - name: <WS02_APP_NAME>
+          image: image-registry.openshift-image-registry.svc:5000/wso2/<WS02_APP_NAME>:<WS02_APP_TAG>
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "1"
+            limits:
+              memory: "3Gi"
+              cpu: "2"
+          ports:
+            - containerPort: 8243   # HTTPS Gateway
+            - containerPort: 8280   # HTTP Gateway
+          livenessProbe:
+            httpGet:
+              path: /services/Version
+              port: 8243
+              scheme: HTTPS
+            initialDelaySeconds: 180
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /services/Version
+              port: 8243
+              scheme: HTTPS
+            initialDelaySeconds: 120
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          volumeMounts:
+            - name: wso2-7-ecare-a-gw-vol
+              mountPath: /home/wso2carbon/wso2am-universal-gw-4.5.0/repository/logs
+      volumes:
+        - name: wso2-7-ecare-a-gw-vol
+          persistentVolumeClaim:
+            claimName: <WS02_APP_NAME>-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: wso2
+  name: wso2-7-ecare-a-gw-svc-ci-staging
+spec:
+  selector:
+    app: <WS02_APP_NAME>
+  ports:
+    - name: https
+      port: 8243
+      targetPort: 8243
+    - name: http
+      port: 8280
+      targetPort: 8280
+  type: ClusterIP
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: <WS02_APP_NAME>-ing-gw
+#   namespace: wso2
+#   annotations:
+#     nginx.ingress.kubernetes.io/ssl-redirect: "true"
+#     nginx.ingress.kubernetes.io/proxy-read-timeout: "90"
+#     nginx.ingress.kubernetes.io/proxy-send-timeout: "90"
+#     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+# spec:
+#   ingressClassName: openshift-default
+#   tls:
+#     - hosts:
+#         - apistest.jazz.com.pk
+#         - localapistest.jazz.com.pk  
+#       secretName: apistest.jazz.com.pk-tls
+#   rules:
+#     - host: apistest.jazz.com.pk
+#       http:
+#         paths:
+#           - path: /jazzapi/apcwallet/msisdn_verification
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: wso2-7-ecare-a-gw-svc-ci-staging
+#                 port:
+#                   number: 8280
+#     - host: localapistest.jazz.com.pk
+#       http:
+#         paths:
+#           - path: /jazzapi/apcwallet/msisdn_verification
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: wso2-7-ecare-a-gw-svc-ci-staging
+#                 port:
+#                   number: 8280
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: <WS02_APP_NAME>-hpa
+  namespace: wso2
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: <WS02_APP_NAME>-deploy
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 70
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0       # react immediately on scale-up
+      policies:
+        - type: Percent
+          value: 100                      # can double replica count
+          periodSeconds: 5                # every 5 seconds
+      selectPolicy: Max                   # pick the highest of above rules
+    scaleDown:
+      stabilizationWindowSeconds: 60     # wait 60s after usage drops before scaling down
+      policies:
+        - type: Percent
+          value: 50                       # reduce pods by max 50% at a time
+          periodSeconds: 15
+      selectPolicy: Max
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: <WS02_APP_NAME>-pvc
+  namespace: wso2
+spec:
+  storageClassName: managed-nfs-tkg-storage
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 2Gi
