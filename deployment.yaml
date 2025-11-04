@@ -86,25 +86,243 @@ spec:
       port: 8280
       targetPort: 8280
   type: ClusterIP
-# ---
-# apiVersion: networking.k8s.io/v1
-# kind: Ingress
-# metadata:
-#   name: <WS02_APP_NAME>-ing-gw
-#   namespace: wso2
-#   annotations:
-#     nginx.ingress.kubernetes.io/ssl-redirect: "true"
-#     nginx.ingress.kubernetes.io/proxy-read-timeout: "90"
-#     nginx.ingress.kubernetes.io/proxy-send-timeout: "90"
-#     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
-# spec:
-#   ingressClassName: openshift-default
-#   tls:
-#     - hosts:
-#         - apistest.jazz.com.pk
-#         - localapistest.jazz.com.pk  
-#       secretName: apistest.jazz.com.pk-tls
-#   rules:
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: <WS02_APP_NAME>-ing-gw
+  namespace: wso2
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "90"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "90"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+spec:
+  ingressClassName: openshift-default
+  tls:
+    - hosts:
+        - apistest.jazz.com.pk
+        - localapistest.jazz.com.pk  
+      secretName: apistest.jazz.com.pk-tls
+  rules:
+    #chatbot balance 
+    - host: apistest.jazz.com.pk
+      http:
+        paths:
+          - path: /chatbotlive/balance
+            pathType: Prefix
+            backend:
+              service:
+                name: wso2-7-ecare-a-gw-svc-ci-staging
+                port:
+                  number: 8280
+    - host: localapistest.jazz.com.pk
+      http:
+        paths:
+          - path: /chatbotlive/balance
+            pathType: Prefix
+            backend:
+              service:
+                name: wso2-7-ecare-a-gw-svc-ci-staging
+                port:
+                  number: 8280
+
+    #chatbot billdetails 
+    - host: apistest.jazz.com.pk
+      http:
+        paths:
+          - path: /chatbotlive/billdetails
+            pathType: Prefix
+            backend:
+              service:
+                name: wso2-7-ecare-a-gw-svc-ci-staging
+                port:
+                  number: 8280
+    - host: localapistest.jazz.com.pk
+      http:
+        paths:
+          - path: /chatbotlive/billdetails
+            pathType: Prefix
+            backend:
+              service:
+                name: wso2-7-ecare-a-gw-svc-ci-staging
+                port:
+                  number: 8280
+
+    #chatbot viewcomplaints
+    - host: apistest.jazz.com.pk
+      http:
+        paths:
+          - path: /chatbotlive/viewcomplaints
+            pathType: Prefix
+            backend:
+              service:
+                name: wso2-7-ecare-a-gw-svc-ci-staging
+                port:
+                  number: 8280
+    - host: localapistest.jazz.com.pk
+      http:
+        paths:
+          - path: /chatbotlive/viewcomplaints
+            pathType: Prefix
+            backend:
+              service:
+                name: wso2-7-ecare-a-gw-svc-ci-staging
+                port:
+                  number: 8280
+
+    #chatbot getbasepackage
+    - host: apistest.jazz.com.pk
+      http:
+        paths:
+          - path: /chatbotlive/getbasepackage
+            pathType: Prefix
+            backend:
+              service:
+                name: wso2-7-ecare-a-gw-svc-ci-staging
+                port:
+                  number: 8280
+    - host: localapistest.jazz.com.pk
+      http:
+        paths:
+          - path: /chatbotlive/getbasepackage
+            pathType: Prefix
+            backend:
+              service:
+                name: wso2-7-ecare-a-gw-svc-ci-staging
+                port:
+                  number: 8280    
+    #chatbot geteligibleoffers
+    - host: apistest.jazz.com.pk
+      http:
+        paths:
+          - path: /chatbotlive/geteligibleoffers
+            pathType: Prefix
+            backend:
+              service:
+                name: wso2-7-ecare-a-gw-svc-ci-staging
+                port:
+                  number: 8280
+    - host: localapistest.jazz.com.pk
+      http:
+        paths:
+          - path: /chatbotlive/geteligibleoffers
+            pathType: Prefix
+            backend:
+              service:
+                name: wso2-7-ecare-a-gw-svc-ci-staging
+                port:
+                  number: 8280
+
+    #chatbot getactiveoffersync
+    - host: apistest.jazz.com.pk
+      http:
+        paths:
+          - path: /chatbotlive/getactiveoffersync
+            pathType: Prefix
+            backend:
+              service:
+                name: wso2-7-ecare-a-gw-svc-ci-staging
+                port:
+                  number: 8280
+    - host: localapistest.jazz.com.pk
+      http:
+        paths:
+          - path: /chatbotlive/getactiveoffersync
+            pathType: Prefix
+            backend:
+              service:
+                name: wso2-7-ecare-a-gw-svc-ci-staging
+                port:
+                  number: 8280
+
+    #chatbot scratchcard
+    - host: apistest.jazz.com.pk
+      http:
+        paths:
+          - path: /chatbotlive/scratchcard
+            pathType: Prefix
+            backend:
+              service:
+                name: wso2-7-ecare-a-gw-svc-ci-staging
+                port:
+                  number: 8280
+    - host: localapistest.jazz.com.pk
+      http:
+        paths:
+          - path: /chatbotlive/scratchcard
+            pathType: Prefix
+            backend:
+              service:
+                name: wso2-7-ecare-a-gw-svc-ci-staging
+                port:
+                  number: 8280
+
+    #chatbot creditcardpayment
+    - host: apistest.jazz.com.pk
+      http:
+        paths:
+          - path: /chatbotlive/creditcardpayment
+            pathType: Prefix
+            backend:
+              service:
+                name: wso2-7-ecare-a-gw-svc-ci-staging
+                port:
+                  number: 8280
+    - host: localapistest.jazz.com.pk
+      http:
+        paths:
+          - path: /chatbotlive/creditcardpayment
+            pathType: Prefix
+            backend:
+              service:
+                name: wso2-7-ecare-a-gw-svc-ci-staging
+                port:
+                  number: 8280
+
+    #chatbot jazzcashtopup
+    - host: apistest.jazz.com.pk
+      http:
+        paths:
+          - path: /chatbotlive/jazzcashtopup
+            pathType: Prefix
+            backend:
+              service:
+                name: wso2-7-ecare-a-gw-svc-ci-staging
+                port:
+                  number: 8280
+    - host: localapistest.jazz.com.pk
+      http:
+        paths:
+          - path: /chatbotlive/jazzcashtopup
+            pathType: Prefix
+            backend:
+              service:
+                name: wso2-7-ecare-a-gw-svc-ci-staging
+                port:
+                  number: 8280
+
+    #chatbot topup
+    - host: apistest.jazz.com.pk
+      http:
+        paths:
+          - path: /chatbotlive/topup
+            pathType: Prefix
+            backend:
+              service:
+                name: wso2-7-ecare-a-gw-svc-ci-staging
+                port:
+                  number: 8280
+    - host: localapistest.jazz.com.pk
+      http:
+        paths:
+          - path: /chatbotlive/topup
+            pathType: Prefix
+            backend:
+              service:
+                name: wso2-7-ecare-a-gw-svc-ci-staging
+                port:
+                  number: 8280  
 #     - host: apistest.jazz.com.pk
 #       http:
 #         paths:
